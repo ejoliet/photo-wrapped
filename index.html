@@ -1,0 +1,132 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <meta name="color-scheme" content="dark light" />
+  <title>Photo Metadata Wrapped</title>
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.css" crossorigin="" />
+  <link rel="stylesheet" href="./styles.css" />
+</head>
+<body>
+  <header class="hero">
+    <div>
+      <p class="eyebrow">100% local photo intelligence</p>
+      <h1>Photo Metadata Wrapped</h1>
+      <p class="sub">Pick a folder. Your browser extracts EXIF, maps your trips, summarizes your gear, and shows hygiene issues. Files never upload.</p>
+    </div>
+    <div class="card privacy-card">
+      <strong>No backend.</strong>
+      <span>EXIF runs in a Web Worker. IndexedDB caches only metadata and optional thumbnails/embeddings on your device.</span>
+    </div>
+  </header>
+
+  <main>
+    <section class="panel pick-panel">
+      <div>
+        <h2>1. Pick a photo folder</h2>
+        <p>Free cap is <span id="capLabel">500</span> photos. Pro mode unlocks full-library indexing, semantic search, dedupe, and burst culling.</p>
+      </div>
+      <div class="actions">
+        <label class="button primary">
+          Pick folder
+          <input id="folderInput" type="file" webkitdirectory directory multiple accept="image/*,.heic,.heif,.avif,.webp" hidden />
+        </label>
+        <button id="resumeBtn" class="button" disabled>Resume cached library</button>
+        <button id="clearBtn" class="button danger">Clear cache</button>
+      </div>
+      <div class="meter"><div id="progressBar"></div></div>
+      <p id="status" class="status">Idle.</p>
+    </section>
+
+    <section class="pro-banner" id="proBanner">
+      <div>
+        <strong>Free preview:</strong> first 500 photos only. Pro unlock: 50k+ photo indexing, CLIP semantic search, duplicate recovery, best-shot picker, OPFS thumbnails, and WebLLM year-in-review.
+      </div>
+      <button id="unlockBtn" class="button small">Unlock local Pro demo</button>
+    </section>
+
+    <section class="stats-grid">
+      <article class="stat"><span id="totalPhotos">0</span><label>photos indexed</label></article>
+      <article class="stat"><span id="geoPhotos">0</span><label>geotagged</label></article>
+      <article class="stat"><span id="missingDates">0</span><label>missing date</label></article>
+      <article class="stat"><span id="totalSize">0 MB</span><label>selected bytes</label></article>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <h2>Travel map</h2>
+        <div id="map"></div>
+      </article>
+      <article class="panel">
+        <h2>Timeline</h2>
+        <canvas id="timelineCanvas" width="900" height="280"></canvas>
+        <h3>Time-of-day heatmap</h3>
+        <canvas id="hourCanvas" width="900" height="160"></canvas>
+      </article>
+    </section>
+
+    <section class="grid two">
+      <article class="panel">
+        <h2>Gear stats</h2>
+        <div id="gearStats" class="list"></div>
+        <canvas id="isoCanvas" width="900" height="220"></canvas>
+      </article>
+      <article class="panel">
+        <h2>Hygiene</h2>
+        <div id="hygieneStats" class="list"></div>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="row-head">
+        <div>
+          <h2>Large library SQL</h2>
+          <p>DuckDB-WASM lazy-loads after 10k files or manually below. Query the local EXIF table.</p>
+        </div>
+        <button id="duckBtn" class="button">Load DuckDB</button>
+      </div>
+      <textarea id="sqlBox" spellcheck="false">SELECT make, model, COUNT(*) AS n
+FROM photos
+GROUP BY make, model
+ORDER BY n DESC
+LIMIT 10;</textarea>
+      <button id="runSqlBtn" class="button" disabled>Run SQL</button>
+      <pre id="sqlOut" class="output"></pre>
+    </section>
+
+    <section class="panel pro-panel">
+      <div class="row-head">
+        <div>
+          <h2>Pro lab</h2>
+          <p>CLIP embeddings run locally in a module worker with Transformers.js. This is expensive; cache is mandatory.</p>
+        </div>
+        <span id="proState" class="pill">Locked</span>
+      </div>
+      <div class="pro-grid">
+        <div>
+          <h3>Semantic search</h3>
+          <input id="semanticQuery" placeholder="find beach photos with the dog" />
+          <button id="semanticBtn" class="button" disabled>Search local embeddings</button>
+          <div id="semanticResults" class="thumbs"></div>
+        </div>
+        <div>
+          <h3>Duplicate recovery</h3>
+          <button id="dupeBtn" class="button" disabled>Find near-duplicates</button>
+          <pre id="dupeOut" class="output"></pre>
+        </div>
+        <div>
+          <h3>Burst best-shot picker</h3>
+          <button id="burstBtn" class="button" disabled>Score bursts</button>
+          <pre id="burstOut" class="output"></pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <template id="rowTemplate"><div class="row"><span></span><b></b></div></template>
+
+  <script src="https://cdn.jsdelivr.net/npm/leaflet@1.9.4/dist/leaflet.js" crossorigin=""></script>
+  <script type="module" src="./app.js"></script>
+</body>
+</html>
